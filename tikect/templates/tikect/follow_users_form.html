@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+    
+    <h4 class="center">Vous êtes connecté en tant que <strong>{{ user.username }}</strong></h4> <br>
+
+
+
+  <div class="row">
+    <form class="col s12" method="post" action="">
+        <div class="row">
+            <div class="input-field col s6">
+                
+                {{ form.as_p }}
+                {% csrf_token %}
+            <input id="username" type="text" name="username" required class="validate">
+            
+          </div>
+          <div class="input-field col s6">
+            <button type="submit" class="waves-effect waves-light btn"><i class="material-icons right"></i>Envoyer</button>
+
+        </div>
+    </div>
+        
+
+        {% if messages %}
+        {% for message in messages %}
+            <li {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+        <br>
+    {% endif %}
+        <hr>
+        <h3>Abonnements</h3>
+        <div>
+            <table>
+                {% for subscription in user_followed %}
+                <tbody>
+                    <tr>
+                        <td>{{ subscription.followed_user }}</td>
+                        <td><a class="button" href="{% url 'delete_subs_user' subscription.id %}">Désabonner</a></td>
+                    </tr>
+                </tbody>
+                {% endfor %}
+            </table>
+        </div>
+        <hr>
+        <h3>Abonnés</h3>
+        <div>
+            <table>
+                {% for subscription in user_follows  %}
+                    <tbody>
+                    <tr>
+                        <td>{{ subscription.followed_user }}</td>
+                    </tr>
+                    </tbody>
+                {% endfor %}
+            </table>
+        </div>
+        
+    </form>
+</div>
+{% endblock content %}

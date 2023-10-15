@@ -1,0 +1,31 @@
+{% load review_extras %}
+<div class="bloc__user-date">
+    <div class="bloc__user">
+        <p>
+            {% get_poster_display review.user 'review'%}
+        </p>
+    </div>
+    <div class="bloc__date">
+        <p>
+            {{ review.time_created }}
+        </p>
+    </div>
+</div>
+<div class="bloc__headline-rate">
+        <h2>{{ review.headline }}&nbsp;-</h2>
+
+        <p class='bloc__stars'>
+            &nbsp;{% get_rating_stars review.rating %}
+        </p>
+        
+       
+
+</div>
+<div>
+    <p>
+        {{ review.body}}
+    </p>
+<div class="review__ticket">
+    {% include 'reviews/partials/ticket_snippet.html' with ticket=instance.ticket %}
+</div>
+</div>

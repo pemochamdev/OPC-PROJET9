@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="columns is-centered">
+    <div class="column is-half">
+        <h1 class="subtitle">Créer une critique</h1>
+        <div class="box">
+            <form action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset>
+                    <legend><h1 class="subtitle">Livre/article</h1></legend>
+                    <h6>Titre</h6>
+                    {{ticket_form.title}}
+                    <h6>Description</h6>
+                  {{ticket_form.description}}
+                  <p>Image</p> 
+                    <div class="file">
+                        <label class="file-label">
+                          {{ticket_form.image}}
+                          <span class="file-cta">
+                            <span class="file-icon">
+                              <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label">
+                                Télécharger ﬁchier
+                            </span>
+                          </span>
+                        </label>
+                    </div>
+                </fieldset>
+                
+                
+                <hr>
+
+                <fieldset>
+                    <legend><h1 class="subtitle">Critique</h1></legend>
+                    
+                    <strong>{{ review_form.headline.label }}</strong>
+                    <strong>{{ review_form.headline }}</strong>
+                    <strong>{{ review_form.rating.label }}</strong><br>
+
+                    <div class="select is-medium">
+                        <select name="{{review_form.rating.html_name}}" required>
+                            <option value="selected disabled">Selectionnez une note</option>
+                            {% for value, label in review_form.rating.field.choices %}
+                            <option value="{{value}}">
+                              <span>{{label}}  </span>
+                            </option>
+                            {% endfor %}                                                  
+                        </select>
+                      </div>
+                 
+                        <br>
+                    <strong>{{ review_form.description.label }}</strong>
+                    {{ review_form.description }}
+                </fieldset>
+                
+                
+
+                <button class="button is-pulled-right mt-5">Envoyer</button>
+                <div style="height: 50px"></div>
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock content %}

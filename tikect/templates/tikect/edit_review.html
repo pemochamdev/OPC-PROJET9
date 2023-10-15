@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Modifier vôtre critique</h2>
+    <div>
+        <p>Vous êtes en train de poster en réponse à</p>
+        <div class="div_ticket_snippet">
+            <div>
+                <p><strong>{{ review.ticket.author }}</strong> a demandé une critique</p>
+                <p>{{ review.ticket.headline }}</p>
+                <p>{{ review.ticket.description }}</p>
+                <img src="{{ review.ticket.image.url }}" alt="">
+            </div>
+        </div>
+        <div class="div_edit_review">
+        <h3>Review</h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ edit_form.as_p }}
+                {% comment %} <p>
+                    <p>Note</p> 
+                    {% for rating in range %}
+                    <label>
+                        <input value="{{ rating }}" type="radio" name="rating">
+                        - {{ rating }}
+                    </label>
+                    {% endfor %}
+                </p> {% endcomment %}
+
+                <div class="select is-medium">
+                    <select name="{{edit_form.rating.html_name}}" required>
+                        <option value="selected disabled">Selectionnez une note</option>
+                        {% for value, label in edit_form.rating.field.choices %}
+                        <option value="{{value}}">
+                          <span>{{label}}  </span>
+                        </option>
+                        {% endfor %}                                                  
+                    </select>
+                  </div>
+                <button type="submit" >Envoyer</button>
+            </form>
+        </div>
+        <hr>
+        <h3>Supprimer la review ?</h3>
+        <form method="post">
+            {{ delete_form }}
+            {% csrf_token %}
+            <button type="submit" >Supprimer</button>
+        </form>
+    </div>
+{% endblock content %}

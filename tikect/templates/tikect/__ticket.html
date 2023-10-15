@@ -1,0 +1,39 @@
+
+
+<p>
+    {% if ticket.user == user %}
+    Vous avez
+    {% else %}
+    {{ticket.user}} a
+    {% endif %} demandé une critique <span class="is-pulled-right">{{ ticket.time_created }}</span></p>
+    <br>
+    <p>{{ticket.title}}</p>
+    <p>{{ticket.description}}</p>
+    {% if ticket.image %}
+        <img src="{{ ticket.image.url }}" alt="cover" class="cover m-5">
+    {% endif %}
+
+
+
+    {% if buttons == 'ticket_buttons' %}
+    <div>
+        <a href="{% url 'post_delete' 'ticket' ticket.id %}" class="button is-danger is-pulled-right ml-5">Supprimer</a>
+        <a href="{% url 'post_update' 'ticket' ticket.id %}" class="button is-pulled-right">Modifier</a>
+
+    </div>
+    <div style="height:40px"></div>
+    {% elif buttons == 'no_buttons' %}
+
+    {% else %}
+
+        {% if not buttons == 'no_buttons' %}
+            {% if not ticket.reviewed %}
+            <div>
+                <a href="{% url 'review_create'  ticket.id  %}" class="button is-pulled-right">Créer une critique</a>
+            </div>
+            <div style="height:30px"></div>
+            {% else %}
+            <div style="height:10px"></div>
+            {% endif %}
+        {% endif %}
+    {% endif %}

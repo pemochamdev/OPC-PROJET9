@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+    <h2>Créer une critique</h2>
+    <form class="posting-form" method="post" enctype="multipart/form-data">
+        <div>
+            <h2>Livre/Article:</h2>
+        <p>
+            <label for="{{ ticket_form.title.label }}">Titre&nbsp;:</label>
+            <br>
+            {{ ticket_form.title }}
+        </p>
+        <p>
+            <label for="{{ ticket_form.description.label }}">Description&nbsp;:</label>
+            <br>
+            {{ ticket_form.description }}
+        </p>
+        <p>
+            <label>Image:</label>
+            <br>
+            <label>
+                <span for="{{ticket_form.image.label}}" class="btn btn--edit">Télécharger</span>
+                {{ ticket_form.image }}
+            </label>
+            {{ ticket_form.edit_ticket }}
+        </p>
+        </div>
+        <div>
+            <h2>Critique:</h2>
+            {{ review_form.as_p }}
+            {% csrf_token %}
+            <div class="bloc__post">
+                <button type="submit">Publier</button>
+            </div>
+        </div>
+
+    </form>
+{% endblock content %}
