@@ -24,21 +24,21 @@
     <div class="column is-half">
 
     {% for post in page_flux %}
-    <article class="box m-5">
-        {% if post.type == "ticket" %}
-            {% include 'tikect/__ticket.html' with ticket=post user=user %}
-        {% elif post.type == "review" %}
-            {% include 'tikect/__review.html' with review=post user=user %}
-        {% endif %}
+        <article class="box m-5">
+            {% if post.type == "ticket" %}
+                {% include 'tikect/__ticket.html' with ticket=post user=user %}
+            {% elif post.type == "review" %}
+                {% include 'tikect/__review.html' with review=post user=user %}
+            {% endif %}
 
-    </article>
-    <div class="do-up">
-        <a href="#">
-            <span class="material-icons is-pulled-left">
-                arrow_upward
-            </span>
-        </a>
-    </div>
+        </article>
+        <div class="do-up">
+            <a href="#">
+                <span class="material-icons is-pulled-left">
+                    arrow_upward
+                </span>
+            </a>
+        </div>
     {% endfor %}
     </div>
 
@@ -46,7 +46,3 @@
 
 {% endblock content %}
 
-
-{% block script %}
-<script type="text/javascript" src="{% static 'blog/js/stars.js' %}"></script>
-{% endblock script %}

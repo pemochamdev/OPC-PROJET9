@@ -16,11 +16,6 @@ from authy.models import User
 from tikect.models import Ticket, Review, UserFollows
 from tikect.forms import TicketForm, ReviewForm, DeleteReviewForm, FollowUsersForm,DeleteTicketReviewForm
 
-def home(request):
-    """This view is displayed by default,
-    even if a user is not connected"""
-    return render(request, 'registration/login.html')
-
 ########################```````````Welcome to My flux``````````````#######################
 ########################```````````````````````````````````````````#######################
 ####################### flux, own_flux                             #######################

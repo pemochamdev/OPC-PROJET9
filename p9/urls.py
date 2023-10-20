@@ -7,7 +7,7 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('account/', include("authy.urls")),
+    path('', include("authy.urls")),
     
     path('', include("tikect.urls")),
 ]
