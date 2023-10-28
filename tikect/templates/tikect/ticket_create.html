@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<section class="columns is-centered">
+    <div class="column is-half">
+        <h1 class="title">Creer un ticket</h1>
+        <form action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% include 'tikect/__ticket_form.html' %}
+
+            <br>
+            <input type="submit" value="Envoyer" class="button is-primary is-pulled-right">
+        </form>
+    </div>
+
+</section>
+
+{% endblock content %}

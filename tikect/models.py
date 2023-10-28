@@ -1,3 +1,12 @@
+from PIL import Image
+
+from django.db import models
+from django.conf import settings
+from django.core.validators import MinValueValidator, MaxValueValidator
+from p9 import const
+
+
+
 from django.db import models
 import uuid
 from django.db.models.signals import post_save
@@ -16,64 +25,53 @@ RATING = (
 )
 
 
+
+
 class Ticket(models.Model):
-    
-    author = models.ForeignKey(settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE, null=True,
-        related_name='ticket_user'
-    )
-    title = models.CharField(max_length=200,
-        verbose_name='Ticket'
-    )
-    description = models.TextField(max_length=5000)
-    image = models.ImageField(upload_to='tikect',
-        null=False
-    )
-    reviewed = models.BooleanField(default=False)
+    type = "ticket"
+    title = models.CharField(max_length=128, verbose_name="titre")
+    description = models.CharField(max_length=2048, blank=True)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    image = models.ImageField(blank=True)
     time_created = models.DateTimeField(auto_now_add=True)
-    time_update = models.DateTimeField(auto_now=True)
+    reviewed = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ('-time_created',)
 
-
-    def view_image(self):
+    def resize_image(self):
         if self.image:
-            return mark_safe('<img src="{}" width = "50" height="50"/>'.format(self.image.url))
-        
-        return ''        
-    
-    
+            image = Image.open(self.image)
+            image.thumbnail(const.IMAGE_MAX_SIZE)
+            image.save(self.image.path)
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.resize_image()
+
     def __str__(self):
-        return self.title
-    
-    
-    
-    def get_absolute_url(self):
-        return reverse("tikect", args=[self.pk])
-
-
-
+        return f"{self.title} by {self.user}"
 
 
 class Review(models.Model):
-    headline = models.CharField(max_length=128)
-    
-    ticket = models.ForeignKey(Ticket,
+    type = "review"
+    ticket = models.ForeignKey(
+        Ticket,
         on_delete=models.CASCADE,
-        related_name='review_tikects'
-    )
-    rating = models.CharField(default=None, max_length=10, choices=RATING)
-
-    description = models.CharField(max_length=8192, blank=True)
-    
+        related_name="review")
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_review')
-    
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    headline = models.CharField(max_length=128, verbose_name="Titre")
+    rating = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(0), MaxValueValidator(5)],
+        verbose_name="Note")
+    body = models.TextField(
+        max_length=8192, blank=True, verbose_name="Commentaire")
     time_created = models.DateTimeField(auto_now_add=True)
-    
-    time_updated = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.headline
+        return f"{self.ticket} => {self.user}"
 
 
 class UserFollows(models.Model):
@@ -87,8 +85,7 @@ class UserFollows(models.Model):
         related_name="followed")
 
     class Meta:
-    
         unique_together = ('user', 'followed_user')
-     
-        verbose_name = 'User Follows'
-        verbose_name_plural = 'User Follows'
+
+    def __str__(self):
+        return f"{self.user} is following {self.followed_user}"

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="columns is-centered">
+    <div class="column is-half">
+        <h1 class="subtitle">Modifier votre post</h1>
+            {% if type == 'review' %}
+            <div class="box p-5">
+                <h2 class="subtitle">Vous êtes en train de poster en reponse à</h2>
+                <div class="box m-5">
+                    <p>{{post.ticket.user}} a demandé une critique <span class="is-pulled-right">{{ post.ticket.time_created }}</span></p>
+                    <br>
+                    <p>{{post.ticket.title}}</p>
+                    <p>{{post.ticket.description}}</p>
+                    {% if post.ticket.image %}
+                        <img src="{{ post.ticket.image.url }}" alt="cover" class="cover m-5">
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+
+        <form action="" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% if type == "ticket" %}
+                {% include 'tikect/__ticket_form.html' with image=post.image.url buttons='no_buttons' %}
+            {% elif type == "review" %}
+                {% include 'tikect/__review_form.html' %}
+            {% endif %}
+
+
+            <button class="button is-primary mt-5 is-pulled-right">Envoyer</button>
+        </form>
+    </div>
+</div>
+
+
+
+
+{% endblock content %}

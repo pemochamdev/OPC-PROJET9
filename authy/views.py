@@ -13,11 +13,13 @@ def sign_up(request):
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')
             confirm_password = form.cleaned_data.get('confirm_password')
-            User.objects.create(
+            user = User.objects.create(
                 email=email,
                 username=username, 
                 password=password,
             )
+            user.set_password(password)
+            user.save()
             return redirect('login')
     else:
         form = SignUpForm()    

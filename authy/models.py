@@ -1,24 +1,24 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-
-#study gyaan
-
 from tikect.models import Review, Ticket
+from django.core.exceptions import PermissionDenied
 
 
 class User(AbstractUser):
-    email = models.EmailField(unique=True, max_length=100)
-    username = models.CharField(max_length=100)
-    follows = models.ManyToManyField(
-        'self',
-        symmetrical=False,
-        verbose_name='suit',
-    )
 
+    def get_reviews(self):
+        """Get all the reviews from the user"""
+        reviews = Review.objects.filter(user=self)
+        return reviews
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
+    def get_tickets(self):
+        """Get all the tickets from the user"""
+        tickets = Ticket.objects.filter(user=self)
+        return tickets
 
-    def __str__(self):
-        return self.email
-   
+    def is_user(self, post):
+        """Verify if the user wrote a post (ticket or review),
+        return True or raise PermissionDenied"""
+        if post.user == self:
+            return True
+        else:
+            raise PermissionDenied()

@@ -1,68 +1,41 @@
 {% extends 'base.html' %}
+
+{% load static %}
+
 {% block content %}
-<h2>Voici vos Posts</h2>
-<h2>Tickets</h2>
-<div>
-    {% for ticket in tickets %}
-    <div class="div_ticket_snippet">
-        <p>Vous avez publié un Ticket</p>
-        <p>{{ ticket.time_created }}</p>
-        <p>{{ ticket.title }}</p>
-        <p>{{ ticket.description }}</p>
-        <img src="{{ ticket.image.url }}">
-        <div class="div_buttons_submit_and_delete">
-            <div>
-                <a href="{% url 'edit_ticket' ticket.id  %}"><button>modifier</button></a>
-            </div>
-            <div>
-                <form method="post">
-                    {{ delete_form }}
-                    {% csrf_token %}
-                    <button type="submit" >Supprimer</button>
-                </form>
-            </div>
+
+
+<section class="columns is-centered">
+    <div class="column is-half">
+        <h1 class="subtitle">Vos posts</h1>
+
+        <div class="columns m-5">
+            {% include '__pagination.html' with view_name='posts' objects=posts%}
         </div>
+
+        {% for post in posts %}
+        <article class="box m-5">
+            {% if post.type == "ticket" %}
+                {% include 'tikect/__ticket.html' with ticket=post user=user buttons='ticket_buttons' %}
+            {% elif post.type == "review" %}
+                {% include 'tikect/__review.html' with review=post user=user buttons='review_buttons' %}
+            {% endif %}
+        </article>
+        <div class="do-up">
+            <a href="#">
+                <span class="material-icons is-pulled-left">
+                    arrow_upward
+                </span>
+            </a>
+        </div>
+        {% endfor %}
     </div>
-    {% endfor %}
-</div>
-<hr>
-<h2>Reviews</h2>
-<div>
-    {% for review in reviews %}
-        <div>
-            <div class="div_review_snippet">
-                <p>Vous avez publié une critique</p>
-                <p>{{ review.time_created }}</p>
-                <p>{{ review.headline }} - 
-                    {% for rating in ''|center:review.rating %}
-                    ⭐️
-                    {% endfor %}
-                    {% if review.rating == 0 %}
-                    👎 😰 Ce livre ne possède aucune étoile...
-                    {% endif %} 
-                </p>
-                <p>commentaire : {{ review.description }}</p>
-                <div class="div_ticket_snippet">
-                    <p>Ticket - Vous</p>
-                    <p>{{ review.ticket.time_created }}</p>
-                    <p>{{ review.ticket.headline }}</p>
-                    <img src="{{ review.ticket.image.url }}">
-                </div>
-                <div class="div_buttons_submit_and_delete">
-                    <div>
-                        <a href="{% url 'edit_review' review.id %}"><button>modifier</button></a>
-                    </div>
-                    <div>
-                        <form method="post">
-                            {{ delete_form }}
-                            {% csrf_token %}
-                            <button type="submit" >Supprimer</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    {% endfor %}
-</div>
+
+</section>
 
 {% endblock content %}
+
+
+{% block script %}
+<script type="text/javascript" src="{% static 'blog/js/stars.js' %}"></script>
+{% endblock script %}

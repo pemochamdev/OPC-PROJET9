@@ -1,68 +1,75 @@
 from django import forms
+from .models import (
+    Ticket,
+    Review,
+)
 
-from .models import Ticket, Review
 
-class TicketForm(forms.ModelForm):
+"""The forms here are customized to match with the bulma css framework
+"""
+
+
+class TicketNoImageCreateForm(forms.ModelForm):
     title = forms.CharField(
-        max_length=128,
-        widget=forms.TextInput()
-    )
+        widget=forms.TextInput(attrs={"class": "input"}),
+        label="Titre")
     description = forms.CharField(
-        max_length=2048,
-        widget=forms.Textarea()
-    )
-
-    image = forms.ImageField(required=True)
+        widget=forms.Textarea(attrs={
+            "class": "textarea",
+            }),
+        )
 
     class Meta:
         model = Ticket
-        fields = ['title', 'description', 'image']
+        exclude = ('user', 'image')
 
-class DeleteTicketForm(forms.Form):
-    delete_ticket = forms.BooleanField(widget=forms.HiddenInput(), initial=True)
-    
+    def __init__(self, *args, **kwargs):
+        super(TicketNoImageCreateForm, self).__init__(*args, **kwargs)
+        # set the value 'required' to false
+        self.fields['description'].required = False
 
 
+class TicketCreateForm(TicketNoImageCreateForm):
+    image = forms.ImageField(
+        widget=forms.FileInput(attrs={
+            "type": "file",
+        })
+    )
 
-class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Ticket
+        exclude = ('user',)
+
+
+class ReviewCreateForm(forms.ModelForm):
+    headline = forms.CharField(
+        widget=forms.TextInput(attrs={"class": "input"}),
+        label="Titre")
+    body = forms.CharField(
+        widget=forms.Textarea(attrs={
+            "class": "textarea",
+            }),
+        label="Commentaire",
+        )
+    CHOICES = [
+        ('0', '- 0'), ('1', '- 1'), ('2', '- 2'),
+        ('3', '- 3'), ('4', '- 4'), ('5', '- 5')]
+    rating = forms.ChoiceField(
+        widget=forms.RadioSelect, choices=CHOICES,
+        label="Note")
+
     class Meta:
         model = Review
-        fields = ['headline','rating', 'description']
-        widgets = {
-            'rating':forms.Select(attrs={
-                'class':'form-control'
-            })
-        }
+        exclude = ('user', 'ticket',)
 
 
-class DeleteReviewForm(forms.Form):
-    delete_review = forms.BooleanField(widget=forms.HiddenInput(), initial=True)
-    
-
-class FollowUsersForm(forms.Form):
-
-    class Meta:
-        fields = ['followed_id']
-
-    def __init__(self, *args, choices, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['followed_id'] = forms.ChoiceField(
-            label='Nom utilisateur',
-            choices=choices
-            )
-        #self.fields['followed_id'].widget.attrs.update({'class': 'form-user__add'})
-        self.fields['followed_id'].widget.attrs.update(size='40')
-
-
-
-
-class DeleteTicketReviewForm(forms.Form):
-    """
-    on créé notre model de formulaire DeleteTicketReviewForm
-
-    Args:
-        forms (object): on hérite du model de formulaire de django
-    """
-
-    delete_ticket_or_review = forms.BooleanField(widget=forms.HiddenInput, initial=True)
-
+class SearchForm(forms.Form):
+    entry = forms.CharField(
+        max_length=150,
+        widget=forms.TextInput(
+            attrs={
+                "class": "input",
+                "placeholder": "Nom d'utilisateur",
+                },
+            ),
+        )

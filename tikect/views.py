@@ -1,350 +1,280 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.core.paginator import Paginator, EmptyPage
-from django.contrib import messages
-
 from itertools import chain
-from django.db.models import Q, Value, CharField
-from django.contrib.auth import get_user_model
-from django.urls import reverse_lazy
+
+from django.core.paginator import Paginator, EmptyPage
 from django.http import Http404
+from django.shortcuts import redirect, render, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+
+from .models import (
+    Ticket,
+    Review,
+    UserFollows,
+)
+from .forms import (
+    TicketCreateForm,
+    TicketNoImageCreateForm,
+    ReviewCreateForm,
+    SearchForm,
+)
+from p9 import const
 
 
-
-
-from authy.models import User
-from tikect.models import Ticket, Review, UserFollows
-from tikect.forms import TicketForm, ReviewForm, DeleteReviewForm, FollowUsersForm,DeleteTicketReviewForm
-
-########################```````````Welcome to My flux``````````````#######################
-########################```````````````````````````````````````````#######################
-####################### flux, own_flux                             #######################
-#######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
-#######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
-
+def home(request):
+    """This view is displayed by default,
+    even if a user is not connected"""
+    return render(request, 'tikect/home.html')
 
 
 @login_required
-def flux(request):
-    
-    
-    #Nos followers
-    
-    user_follows = UserFollows.objects.filter(user=request.user).values('followed_user')
+def flux(request, page=1):
+    followed_users = get_user_model().objects.filter(
+        followed__user=request.user)
+    reviews = Review.objects.filter(
+        Q(user=request.user) | Q(ticket__user=request.user) |
+        Q(user__in=followed_users))
+    tickets = Ticket.objects.filter(
+        Q(user=request.user) | Q(user__in=followed_users))
 
-
-    #Toutes nos reviews et celles de nos followers
-    all_reviews = Review.objects.filter( Q(user__in=user_follows) | Q(user = request.user.id))
-    
-
-    #Tous nos tickets et ceux de nos follows
-    all_tickets= Ticket.objects.filter(Q(author__in = user_follows) | Q(author = request.user))
-    
-
-    all_unreviewed_tickets = all_tickets.exclude(review_tikects__in=all_reviews).annotate(
-        state=Value("UNREVIEWED", CharField())
-    )
-
-    review_and_ticket = sorted(
+    posts_created = sorted(
         chain(
-            all_reviews, all_unreviewed_tickets
-        ), 
-        key=lambda instance:instance.time_created,
-        # reverse =True pour indiquer que le tri doit etre effectue dans
-        # l'ordre decroissant
-        reverse=True
-    )
-    paginator = Paginator(review_and_ticket, 4)
-    page_number = request.GET.get('page')
-    user = request.user
-    page_flux = paginator.get_page(page_number)
+            reviews,
+            tickets,
+            ),
+        key=lambda post: post.time_created, reverse=True)
+    paginator = Paginator(posts_created, 3)
+    try:
+        posts = paginator.page(page)
+    except EmptyPage:
+        posts = paginator.page(paginator.num_pages)
 
     context = {
-        'page_flux': page_flux,
-        'user':user,
+        "posts": posts,
     }
-
-    return render(request, 'tikect/flux.html', context)
+    return render(request, "tikect/flux.html", context)
 
 
 @login_required
-def own_flux(request):
-    
-    
-    reviews = Review.objects.filter(user = request.user)
-    tickets = Ticket.objects.filter(author = request.user)
-
-
-    review_ticket = sorted(
-        chain(
-            reviews, tickets
-        ), 
-        key= lambda instance: instance.time_created, reverse=True
-    )
-
-    paginator = Paginator(review_ticket, 4)
-    page_number = request.GET.get('page')
-    own_flux_page = paginator.get_page(page_number)
-    context = {
-        'own_flux_page': own_flux_page,
-    }
-    return render(request, 'tikect/posts.html', context)
-
-
-########################```````````Welcome to My ticket````````````#######################
-########################```````````````````````````````````````````#######################
-####################### create_ticket, edite_tticket, delete_ticket#######################
-#######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
-#######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
-
-@login_required
-def create_tikect(request):
-    if request.method =='POST':
-        form = TicketForm(request.POST, request.FILES)
-        print('post type')
+def ticket_create(request):
+    if request.method == "POST":
+        if len(request.FILES) == 0:
+            form = TicketNoImageCreateForm(request.POST)
+        else:
+            form = TicketCreateForm(request.POST, request.FILES)
         if form.is_valid():
-            print('valide')
-            
-            ticket = form.save(commit = False)
-            ticket.author = request.user
-            
-            ticket.save()            
-            return redirect ('display_posts')
-    else:
-        form = TicketForm()
+            ticket = form.save(commit=False)
+            ticket.user = request.user
+            ticket.save()
+            return redirect('flux')
+    form = TicketCreateForm()
     context = {
-        'form':form,
+        "form": form,
     }
-    return render(request, 'tikect/create_ticket_form.html', context)
+    return render(request, "tikect/ticket_create.html", context)
 
-def edit_ticket(request, ticket_id):
 
+@login_required
+def review_create(request, ticket_id):
+    """Creates a review from an existing ticket"""
     ticket = get_object_or_404(Ticket, id=ticket_id)
-   
-    photo_url = ticket.image.url
-    edit_form = TicketForm(instance=ticket)
-    delete_form = DeleteTicketReviewForm()
+    if ticket.reviewed:
+        raise Http404()
     if request.method == "POST":
-        print('post ')
-    
-        edit_form = TicketForm(instance=ticket)
-        print('edit_ticket')
-        image = request.FILES.get("image")
-        ticket.image = image
-        edit_form = TicketForm(request.POST, instance=ticket)
-        if edit_form.is_valid():
-            edit_form.save()
-            return redirect("display_posts")
-        if "delete_ticket_or_review" in request.POST:
-            delete_form = DeleteTicketReviewForm(request.POST)
-            if delete_form.is_valid():
-                ticket.delete()
-                return redirect("display_posts")
-
-    context = {
-        "photo_url": photo_url,
-        "edit_form": edit_form,
-        "delete_form": delete_form,
-    }
-    return render(request, "tikect/edit_ticket.html", context=context)
-
-
-@login_required
-def delete_ticket(request, ticket_id):
-    tikect = get_object_or_404(Ticket , id=ticket_id)
-    tikect.delete()
-    return redirect('display_posts')
-
-
-
-########################```````````Welcome to My review````````````#######################
-########################```````````````````````````````````````````#######################
-####################### create_review, edite_treview, delete_review#######################
-#######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
-#######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#######################
-
-
-@login_required
-def review_create(request):
-   
-    if request.method == "POST":
-        review_form = ReviewForm(request.POST)
-        ticket_form = TicketForm(request.POST, request.FILES)
-        if all([review_form.is_valid(), ticket_form.is_valid()]):
-            ticket = ticket_form.save(commit=False)
-            ticket.author = request.user
+        form = ReviewCreateForm(request.POST)
+        if form.is_valid():
+            review = form.save(commit=False)
+            review.ticket = ticket
+            review.user = request.user
+            review.save()
             ticket.reviewed = True
             ticket.save()
+            return redirect('flux')
 
-            review = review_form.save(commit=False)
-            review.user = request.user
-            review.ticket = ticket
-            review.save()
-            return redirect('display_posts')
-     
-    else:
-        review_form = ReviewForm()
-        ticket_form  = TicketForm()
+    form = ReviewCreateForm()
     context = {
-        "ticket_form": ticket_form,
-        "review_form": review_form,
+        "ticket": ticket,
+        "form": form,
     }
     return render(request, "tikect/review_create.html", context)
 
-@login_required
-def edit_review(request, review_id):
 
-    review = get_object_or_404(Review, id=review_id)
-    
-    edit_form = ReviewForm(instance=review)
-    delete_form = DeleteTicketReviewForm()
+@login_required
+def review_publish(request):
+    """Creates a spontaneous review without ticket, the ticket is
+    genereted beside the review in a row"""
     if request.method == "POST":
-        print('post')
-        delete_form = DeleteTicketReviewForm(request.POST)
-        rating = request.POST.get("rating")
-        review.rating = rating
-        edit_form = ReviewForm(request.POST, instance=review)
-        if edit_form.is_valid():
-            print()
-            edit_form.save()
-            return redirect("display_posts")
-        if "delete_ticket_or_review" in request.POST:
-            delete_form = DeleteTicketReviewForm(request.POST)
-            if delete_form.is_valid():
-                review.delete()
-                return redirect("display_posts")
+        ticket_form = TicketCreateForm(request.POST, request.FILES)
+        review_form = ReviewCreateForm(request.POST)
+        if ticket_form.is_valid() and review_form.is_valid():
+            ticket = ticket_form.save(commit=False)
+            ticket.user = request.user
+            ticket.save()
+
+            review = review_form.save(commit=False)
+            review.ticket = ticket
+            review.user = request.user
+            review.save()
+            ticket.reviewed = True
+            ticket.save()
+            return redirect('flux')
+
+    ticket_form = TicketCreateForm()
+    review_form = ReviewCreateForm()
+    context = {
+        'ticket_form': ticket_form,
+        'review_form': review_form,
+    }
+    return render(request, "tikect/review_publish.html", context)
+
+
+@login_required
+def subscriptions(request):
+    """this views allows to follow / unfollow other users"""
+    followings = UserFollows.objects.filter(user=request.user)
+    followers = UserFollows.objects.filter(followed_user=request.user)
+    if request.method == "POST":
+        form = SearchForm(request.POST)
+        if form.is_valid():
+            name = form.cleaned_data['entry']
+            try:
+                user_to_follow = get_user_model().objects.get(username=name)
+            except get_user_model().DoesNotExist:
+                messages.add_message(
+                    request, messages.ERROR, (
+                        f"Il n'existe pas d'utilisateur \"{name}\""
+                        ),
+                    extra_tags=const.ERROR
+                )
+                return redirect('subscriptions')
+            else:
+                new_follow = UserFollows(
+                    user=request.user, followed_user=user_to_follow)
+                new_follow.save()
+                messages.add_message(
+                    request, messages.SUCCESS, (
+                        f"Vous êtes abonné à \"{name}\""
+                        ),
+                    extra_tags=const.SUCCESS
+                )
+                return redirect('subscriptions')
+
+    form = SearchForm()
+    context = {
+        'followings': followings,
+        'followers': followers,
+        'form': form,
+    }
+    return render(request, 'tikect/subscriptions.html', context)
+
+
+@login_required
+def unfollow(request, id):
+    """This code is called to unfollow a user when the button
+    "unsuscribe" is clicked"""
+    unfollow = get_object_or_404(get_user_model(), id=id)
+    if request.method == "POST":
+        unfollowing = get_object_or_404(
+            UserFollows, user=request.user, followed_user=unfollow)
+        unfollowing.delete()
+        messages.add_message(
+            request, messages.SUCCESS, (
+                f"Vous vous êtes désabonné à \"{unfollow.username}\""
+                ),
+            extra_tags=const.SUCCESS
+        )
+        return redirect('subscriptions')
 
     context = {
-        "review": review,
-        "edit_form": edit_form,
-        "delete_form": delete_form,
-        "range": range(6),
+        "unfollow": unfollow,
     }
-    return render(request, "tikect/edit_review.html", context=context)
-
-
-
-@login_required
-def delete_review(request, review_id):
-    review = get_object_or_404(Review, id=review_id)
-    ticket = get_object_or_404(Ticket, id = review.ticket.id)
-    ticket.reviewed = False
-    ticket.save()
-    review.delete()
-    return redirect('display_posts')
-
+    return render(request, 'tikect/unfollow.html', context)
 
 
 @login_required
-def review_with_ticket(request):
+def posts(request, page=1):
+    "displays the own posts of a user"
+    reviews = request.user.get_reviews()
+    tickets = request.user.get_tickets()
+    posts_created = sorted(
+        chain(
+            reviews,
+            tickets,
+            ),
+        key=lambda post: post.time_created, reverse=True)
+    paginator = Paginator(posts_created, 3)
+    try:
+        posts = paginator.page(page)
+    except EmptyPage:
+        posts = paginator.page(paginator.num_pages)
+    context = {
+        'posts': posts,
+    }
+    return render(request, "tikect/posts.html", context)
 
-    if request.method == 'POST':
-        review_form = ReviewForm(request.POST)
-        ticket_form = TicketForm(request.POST, request.FILES)
 
-        if ticket_form.is_valid():
-            print('valide ticket')
-            if review_form.is_valid():
-                print('valide review')
-                new_ticket_form = ticket_form.save(commit=False)
-                new_ticket_form.author = request.user
-                new_ticket_form.save()
-
-                new_review_form = review_form.save(commit=False)
-                new_review_form.ticket = new_ticket_form
-                new_review_form.user = request.user
-
-                new_review_form.save()
-                new_ticket_form.reviewed = True
-                new_ticket_form.save()
-
-                return redirect('flux')
-        
+@login_required
+def post_delete(request, type, id):
+    if type == 'review':
+        post = get_object_or_404(Review, id=id)
+        request.user.is_user(post)
+        ticket = post.ticket
+        ticket.reviewed = False
+        ticket.save()
+    elif type == 'ticket':
+        post = get_object_or_404(Ticket, id=id)
     else:
-        review_form = ReviewForm()
-        ticket_form = TicketForm()
-    
-    context = {
-        'review_form':review_form,
-        'ticket_form':ticket_form,
-    }
-
-    return render(request, 'tikect/review_with_ticket.html', context)
-
-@login_required
-def delete_subscript_user(request, pk_subs):
-    user = get_object_or_404(User, id = request.user.id)
-    subscript_user = get_object_or_404(UserFollows, pk = pk_subs)
-    user.follows.remove(subscript_user.followed_user)
-    subscript_user.delete()
-
-    return redirect('follow_users')
-
-@login_required
-def follow_users(request):
-
-    user_follows = UserFollows.objects.filter(user=request.user)
-    user_followed = UserFollows.objects.filter(followed_user=request.user)
+        raise Http404()
     if request.method == "POST":
-        user = request.POST.get("username")
-        try:
-            user_to_follow = User.objects.get(email=user)
-            if user_to_follow == request.user:
-                messages.error(request, "Vous ne pouvez pas vous ajouter vous-même !")
-                return redirect("follow_users")
-            elif UserFollows.objects.filter(followed_user=user_to_follow):
-                messages.error(request, "Vous suivez déjà cet utilisateur")
-                return redirect("follow_users")
-        except User.DoesNotExist:
-            messages.error(request, "nom incorrect ou utilisateur inexistant")
-            return redirect("follow_users")
+        post.delete()
+        request.user.is_user(post)
+        return redirect('posts')
+    context = {
+        'post': post,
+        'type': type,
+    }
+    request.user.is_user(post)
+    return render(request, 'tikect/post_delete.html', context)
+
+
+@login_required
+def post_update(request, type, id):
+    if request.method == "POST":
+        if type == 'review':
+            post = get_object_or_404(Review, id=id)
+            request.user.is_user(post)
+            form = ReviewCreateForm(request.POST, instance=post)
+            if form.is_valid():
+                form.save()
+        elif type == 'ticket':
+            post = get_object_or_404(Ticket, id=id)
+            request.user.is_user(post)
+            form = TicketCreateForm(
+                request.POST, request.FILES, instance=post)
+            reviewed = post.reviewed
+            if form.is_valid():
+                ticket = form.save(commit=False)
+                ticket.reviewed = reviewed
+                ticket.save()
         else:
-            subscription = UserFollows(
-                user=request.user, followed_user=user_to_follow
-            )
-            subscription.save()
+            raise Http404()
+        return redirect('posts')
 
-    user = request.user
+    if type == 'review':
+        post = get_object_or_404(Review, id=id)
+        form = ReviewCreateForm(instance=post)
 
-    context = {
-        "user_follows": user_follows,
-        "user_followed": user_followed,
-        "user": user,
-    }
-    return render(request, "tikect/follow_users_form.html", context=context)
-
-
-
-def display_posts(request):
-
-    tickets = Ticket.objects.filter(author=request.user)
-    reviews =Review.objects.filter(user=request.user)
-    delete_form = DeleteTicketReviewForm()
-
-    for ticket in tickets:
-        if "delete_ticket_or_review" in request.POST:
-            delete_form = DeleteTicketReviewForm(request.POST)
-            if delete_form.is_valid():
-                ticket.delete()
-                return redirect("display_posts")
-
-    for review in reviews:
-        if "delete_ticket_or_review" in request.POST:
-            delete_form = DeleteTicketReviewForm(request.POST)
-            if delete_form.is_valid():
-                review.delete()
-                return redirect("display_posts")
-
-    tickets_sorted = sorted(
-        tickets, key=lambda instance: instance.time_created, reverse=True
-    )
-    reviews_sorted = sorted(
-        reviews, key=lambda instance: instance.time_created, reverse=True
-    )
+    elif type == 'ticket':
+        post = get_object_or_404(Ticket, id=id)
+        form = TicketCreateForm(instance=post)
+    else:
+        raise Http404()
 
     context = {
-        "tickets": tickets_sorted,
-        "reviews": reviews_sorted,
-        "delete_form": delete_form,
+        'post': post,
+        'form': form,
+        'type': type,
     }
-    return render(request, "tikect/posts.html", context=context)
+    request.user.is_user(post)
+    return render(request, 'tikect/post_update.html', context)

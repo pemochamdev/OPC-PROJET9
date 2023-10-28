@@ -22,8 +22,8 @@
           <a href="#" class="brand-logo center">LITReview</a>
           <ul id="nav-mobile" class="right hide-on-med-and-down">
             <li><a href="{% url "flux" %}">Flux</a></li>      
-            <li><a href="{% url "display_posts" %}">Posts</a></li>            
-            <li><a href="{% url "follow_users" %}">Abonnements</a></li>
+            <li><a href="{% url "posts" %}">Posts</a></li>            
+            <li><a href="{% url "subscriptions" %}">Abonnements</a></li>
 
             {% if user.is_authenticated %}
             <li><a href="{% url "sign-out" %}">Se déconnecter</a></li>

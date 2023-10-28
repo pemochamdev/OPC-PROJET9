@@ -1,0 +1,16 @@
+
+<strong>{{ form.headline.label }}</strong>
+<strong>{{ form.headline }}</strong>
+<strong>{{ form.rating.label }}</strong><br>
+<div class="columns">
+    {% for choice in form.rating %}
+        <div class="column">
+            <span>{{choice.label}}  {{choice}}</span>
+        </div>
+    {% endfor %}
+
+</div>
+
+<br>
+<strong>{{ form.body.label }}</strong>
+{{ form.body }}

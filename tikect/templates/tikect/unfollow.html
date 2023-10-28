@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="has-text-centered mt-50">
+    <section classs="">
+        <h1 class="subtitle">Êtes-vous certain de ne plus suivre {{unfollow.username}} ?</h1>
+
+        <form action="" method="post">
+            {% csrf_token %}
+            <a href="{% url 'subscriptions' %}" class="button">Annuler</a>
+            <button class="button is-danger">Me désabonner</button>
+        </form>
+    </section>
+
+</div>
+
+{% endblock content %}

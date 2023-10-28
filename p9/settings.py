@@ -37,7 +37,7 @@ INSTALLED_APPS = [
 
     ############### third apps ###############
     'jazzmin',
-    #'admin_soft.apps.AdminSoftDashboardConfig',
+    
 
     
     'django.contrib.admin',
@@ -145,7 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'authy.User'
 
 LOGOUT_REDIRECT_URL = 'login'
-LOGIN_REDIRECT_URL = 'display_posts'
+LOGIN_REDIRECT_URL = 'posts'
 LOGIN_URL = '/'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
