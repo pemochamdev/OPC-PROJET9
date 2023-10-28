@@ -1,39 +1,56 @@
 
-
-<p>
-    {% if ticket.user == user %}
-    Vous avez
-    {% else %}
-    {{ticket.user}} a
-    {% endif %} demandé une critique <span class="is-pulled-right">{{ ticket.time_created }}</span></p>
-    <br>
-    <p>{{ticket.title}}</p>
-    <p>{{ticket.description}}</p>
-    {% if ticket.image %}
-        <img src="{{ ticket.image.url }}" alt="cover" class="cover m-5">
-    {% endif %}
-
-
-
-    {% if buttons == 'ticket_buttons' %}
-    <div>
-        <a href="{% url 'post_delete' 'ticket' ticket.id %}" class="button is-danger is-pulled-right ml-5">Supprimer</a>
-        <a href="{% url 'post_update' 'ticket' ticket.id %}" class="button is-pulled-right">Modifier</a>
-
+<div class="field">
+    <label class="label">{{ form.title.label }}</label>
+    <div class="control">
+        {{ form.title }}
     </div>
-    <div style="height:40px"></div>
-    {% elif buttons == 'no_buttons' %}
 
-    {% else %}
+</div>
 
-        {% if not buttons == 'no_buttons' %}
-            {% if not ticket.reviewed %}
-            <div>
-                <a href="{% url 'review_create'  ticket.id  %}" class="button is-pulled-right">Créer une critique</a>
-            </div>
-            <div style="height:30px"></div>
-            {% else %}
-            <div style="height:10px"></div>
-            {% endif %}
-        {% endif %}
-    {% endif %}
+<div class="field">
+    <label class="label">{{ form.description.label }}</label>
+    <div class="control">
+        {{ form.description }}
+    </div>
+</div>
+
+<label class="label">{{ form.image.label }}</label>
+{% if image %}
+    <img src="{{ image }}" alt="cover" class="cover m-5">
+{% endif %}
+<div class="file">
+    <label class="file-label">
+      <input id="id_image" class="file-input" type="file" name="image" accept="image/*">
+      <span class="file-cta">
+        <span class="file-icon">
+            <span class="material-icons">
+                file_upload
+            </span>
+        </span>
+            <span class="file-label">
+                Télécharger un fichier
+            </span>
+      </span>
+      <span class="file-name is-fullwidth" id="selected_file" title="aucun fichier">
+        aucun fichier selectionné
+      </span>
+    </label>
+
+  </div>
+
+
+
+{% block script %}
+<script>
+
+const fileInput = document.getElementById('id_image');
+const selected_file_elem = document.getElementById('selected_file')
+fileInput.onchange = () => {
+const selectedFile = fileInput.files[0];
+selected_file_elem.innerHTML = selectedFile.name;
+selected_file_elem.setAttribute("title", selectedFile.name);
+
+}
+</script>
+
+{% endblock script %}

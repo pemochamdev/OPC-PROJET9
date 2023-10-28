@@ -66,6 +66,7 @@ def ticket_create(request):
         if form.is_valid():
             ticket = form.save(commit=False)
             ticket.user = request.user
+            ticket.reviewed = True
             ticket.save()
             return redirect('flux')
     form = TicketCreateForm()
