@@ -1,31 +1,22 @@
-{% load review_extras %}
-<div class="bloc__user-date">
-    <div class="bloc__user">
-        <p>
-            {% get_poster_display review.user 'review'%}
-        </p>
-    </div>
-    <div class="bloc__date">
-        <p>
-            {{ review.time_created }}
-        </p>
-    </div>
-</div>
-<div class="bloc__headline-rate">
-        <h2>{{ review.headline }}&nbsp;-</h2>
 
-        <p class='bloc__stars'>
-            &nbsp;{% get_rating_stars review.rating %}
-        </p>
-        
-       
+<p>
+    {% if review.user == user %}
+    Vous avez
+    {% else %}
+    {{review.user}} a
+    {% endif %} publié une critique <span class="is-pulled-right">{{ review.time_created }}</span></p>
+    <br>
+    <p>{{review.headline}} - <span class="rating" id="rating_id_{{review.id}}" rating="{{ review.rating }}"></span></p>
+    <p>{{review.body}}</p>
 
-</div>
-<div>
-    <p>
-        {{ review.body}}
-    </p>
-<div class="review__ticket">
-    {% include 'reviews/partials/ticket_snippet.html' with ticket=instance.ticket %}
-</div>
-</div>
+    <article class="box m-5">
+        {% include 'tikect/ticket.html' with ticket=review.ticket buttons='no_buttons' %}
+    </article>
+
+    {% if buttons == 'review_buttons' %}
+    <a href="{% url 'post_delete' 'review' review.id %}" class="button is-danger is-pulled-right ml-5">Supprimer</a>
+    <a href="{% url 'post_update' 'review' review.id %}" class="button is-pulled-right">Modifier</a>
+    <div style="height:40px"></div>
+    {% else %}
+    <div style="height:10px"></div>
+    {% endif %}

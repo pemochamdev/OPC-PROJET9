@@ -10,15 +10,15 @@
         <h1 class="subtitle">Vos posts</h1>
 
         <div class="columns m-5">
-            {% include '__pagination.html' with view_name='posts' objects=posts%}
+            {% include 'pagination.html' with view_name='posts' objects=posts%}
         </div>
 
         {% for post in posts %}
         <article class="box m-5">
             {% if post.type == "ticket" %}
-                {% include 'tikect/__ticket.html' with ticket=post user=user buttons='ticket_buttons' %}
+                {% include 'tikect/ticket.html' with ticket=post user=user buttons='ticket_buttons' %}
             {% elif post.type == "review" %}
-                {% include 'tikect/__review.html' with review=post user=user buttons='review_buttons' %}
+                {% include 'tikect/review.html' with review=post user=user buttons='review_buttons' %}
             {% endif %}
         </article>
         <div class="do-up">

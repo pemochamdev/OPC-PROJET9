@@ -7,7 +7,7 @@
 <div class="columns is-centered">
     <div class="column is-half">
         <div class="columns m-5">
-            {% include '__pagination.html' with view_name='flux' objects=posts%}
+            {% include 'pagination.html' with view_name='flux' objects=posts%}
         </div>
         <div class="columns" >
             <div class="column is-half">
@@ -26,9 +26,9 @@
     {% for post in posts %}
     <article class="box m-5">
         {% if post.type == "ticket" %}
-            {% include 'tikect/__ticket.html' with ticket=post user=user %}
+            {% include 'tikect/ticket.html' with ticket=post user=user %}
         {% elif post.type == "review" %}
-            {% include 'tikect/__review.html' with review=post user=user %}
+            {% include 'tikect/review.html' with review=post user=user %}
         {% endif %}
 
     </article>

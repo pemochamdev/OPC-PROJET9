@@ -23,9 +23,9 @@
         <form action="" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {% if type == "ticket" %}
-                {% include 'tikect/__ticket_form.html' with image=post.image.url buttons='no_buttons' %}
+                {% include 'tikect/ticket_form.html' with image=post.image.url buttons='no_buttons' %}
             {% elif type == "review" %}
-                {% include 'tikect/__review_form.html' %}
+                {% include 'tikect/review_form.html' %}
             {% endif %}
 
 
